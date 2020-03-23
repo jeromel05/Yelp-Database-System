@@ -1,10 +1,10 @@
-# Project for the Introduction to Database- CS322
+# Project for the Introduction to Database- CS322: Group 42
 
-| Student's name |
-| -------------- |
-| Jaakik |
-| Jerome  |
-| Wenuka Gunarathna |
+| Student's name | Email |
+| -------------- | --------------------- |
+| Jaakik Marouane | jaakik.marouane@epfl.ch |
+| Jérôme Lüscher | jerome.luscher@epfl.ch |
+| Wenuka Gunarathna | wenuka.gunarathna@epfl.ch |
 
 ## Milestone 1
 
