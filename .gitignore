@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 
 yelp_csv/
+yelp-csv/
+.DS_Store
