@@ -4,7 +4,6 @@ CREATE TABLE Attr_Ambience_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -19,7 +18,6 @@ CREATE TABLE Attr_BusinessParking_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -34,7 +32,6 @@ CREATE TABLE Attr_DietaryRestrictions_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -42,7 +39,6 @@ CREATE TABLE Attr_GoodForMeal_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -50,7 +46,6 @@ CREATE TABLE Attr_Music_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -58,7 +53,6 @@ CREATE TABLE Attr_NoiseLevel_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
@@ -144,7 +138,7 @@ CREATE TABLE Hours (
 
 CREATE TABLE Open_at (
 	Business_id CHAR(22),
-    Opening_hour_id INTEGER,
+    Opening_hours_id INTEGER,
 	Day_id INTEGER,
 	PRIMARY KEY (Business_id, Opening_hours_id),
     FOREIGN KEY (Business_id) references Business(Business_id),
