@@ -8,12 +8,26 @@ CREATE TABLE Attr_Ambience_map (
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
+CREATE TABLE Attr_Ambience (
+    Sub_Attr_id INTEGER,
+ 	Sub_Attr_name VARCHAR(50),
+    UNIQUE (Sub_Attr_name),
+    PRIMARY KEY (Sub_Attr_id)
+)
+
 CREATE TABLE Attr_BusinessParking_map (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
     FOREIGN KEY (User_id) references Users(User_id)
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
+)
+
+CREATE TABLE Attr_BusinessParking (
+    Sub_Attr_id INTEGER,
+ 	Sub_Attr_name VARCHAR(50),
+    UNIQUE (Sub_Attr_name),
+    PRIMARY KEY (Sub_Attr_id)
 )
 
 CREATE TABLE Attr_DietaryRestrictions_map (
@@ -48,19 +62,6 @@ CREATE TABLE Attr_NoiseLevel_map (
     FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
 )
 
-CREATE TABLE Attr_Ambience (
-    Sub_Attr_id INTEGER,
- 	Sub_Attr_name VARCHAR(50),
-    UNIQUE (Sub_Attr_name),
-    PRIMARY KEY (Sub_Attr_id)
-)
-
-CREATE TABLE Attr_BusinessParking (
-    Sub_Attr_id INTEGER,
- 	Sub_Attr_name VARCHAR(50),
-    UNIQUE (Sub_Attr_name),
-    PRIMARY KEY (Sub_Attr_id)
-)
 
 CREATE TABLE Attr_DietaryRestrictions (
     Sub_Attr_id INTEGER,
@@ -136,7 +137,7 @@ CREATE TABLE FRIENDS (
 )
 
 CREATE TABLE Hours (
-	Hours VARCHAR(8),
+	Hours VARCHAR(8), #contains both open and closing time, with dash, first open and then close
 	Hours_id INTEGER,
 	PRIMARY KEY (Hours_id)
 )
@@ -145,11 +146,9 @@ CREATE TABLE Open_at (
 	Business_id CHAR(22),
     Opening_hour_id INTEGER,
 	Day_id INTEGER,
-    Closing_hours_id INTEGER,
-	PRIMARY KEY (Business_id, Opening_hour_id),
+	PRIMARY KEY (Business_id, Opening_hours_id),
     FOREIGN KEY (Business_id) references Business(Business_id),
-	FOREIGN KEY (Opening_hour_id) references Opening_hours(Hours_id),
-    FOREIGN KEY (Closing_hours_id) references Opening_hours(Hours_id)
+	FOREIGN KEY (Opening_hours_id) references Hours(Hours_id),
 )
 
 CREATE TABLE Postal_code (
