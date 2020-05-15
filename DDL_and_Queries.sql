@@ -315,6 +315,7 @@ Order by
 
 --Query 11: Find and show the minimum, maximum, mean, and median number of categories per business.
 --			Show the final statistic (4 numbers respectively, aggregated over all the businesses)  
+
 SELECT
 AVG(COUNT(cat_id)) AS averages,
 MAX(COUNT(cat_id)) AS maxi,
@@ -323,9 +324,11 @@ PERCENTILE_CONT(0.5)WITHIN GROUP(ORDER BY COUNT(cat_id) DESC) as medianito
 FROM
 Category cat
 group by cat.business_id
+
+
 --Query 12: Find the businesses (show 'name', 'stars', 'review count') in the city of Las Vegas possessing 'valet' parking
---and open between '19:00' and '23:00' hours on a Friday.
-and open between '19:00' and '23:00' hours on a Friday.
+--          and open between '19:00' and '23:00' hours on a Friday.
+
 SELECT name,stars, review_count 
 FROM business b 
 LEFT JOIN postal_code p 
@@ -339,6 +342,85 @@ AND a.sub_attr_id = 1
 AND o.day_id=5 
 AND o.opening_hour_id <= 19*60 
 AND o.closing_hour_id >= 23*60
+
+
+--------------------------------- DELIVERABLE 3 ------------------------
+
+--Query 2: What is the average difference in review scores for businesses that are considered "good for dinner" that have noise levels "loud" or "very loud", ---        compared to ones with noise levels "average" or "quiet"?
+SELECT
+    AVG(b2.stars) - AVG(b1.stars)
+FROM
+    Business B1, attr_goodformeal G1, attr_goodformeal_map GM1, attr_noiselevel N1, attr_noiselevel_map NM1, 
+    Business B2, attr_noiselevel N2, attr_noiselevel_map NM2, attr_goodformeal G2, attr_goodformeal_map GM2
+WHERE
+    b1.business_id = g1.business_id 
+    AND b1.business_id = n1.business_id 
+    AND b2.business_id = g2.business_id 
+    AND b2.business_id = n2.business_id 
+    AND gm1.sub_attr_id = g1.sub_attr_id 
+    AND gm2.sub_attr_id = g2.sub_attr_id 
+    AND gm1.sub_attr_name = 'dinner' 
+    AND gm2.sub_attr_name = 'dinner' 
+    AND n1.sub_attr_id = nm1.sub_attr_id 
+    AND (nm1.sub_attr_name = 'loud' OR nm1.sub_attr_name = 'very_loud')
+    AND n2.sub_attr_id = nm2.sub_attr_id
+    AND (nm2.sub_attr_name = 'average' OR nm2.sub_attr_name = 'quiet');
+    
+    
+--Query 5: Find the average rating and number of reviews for all businesses which have at least two categories and more than (or equal to) one parking type.
+
+SELECT
+    AVG(B.stars) as average_rating, AVG(B.review_count) as average_review_count
+FROM
+    Business B
+WHERE
+    B.Business_id IN(SELECT business_id FROM attr_businessparking
+        group by business_id having count(business_id)>=1)
+    AND B.Business_id IN(SELECT business_id FROM Category
+        group by business_id having count(business_id)>1)
+        
+--Query 8: Find the ids of the businesses that have been reviewed by more than 1030 unique users.
+
+SELECT
+    R.Business_id
+FROM
+    Reviews R
+    GROUP BY Business_id having COUNT(DISTINCT(user_id))> 1030;
+    
+
+--Query 11: Find and display all the cities that satisfy the following: each business in the city has at least two reviews.
+
+SELECT
+    Distinct(p.city)
+FROM
+    Business B, Postal_code P
+WHERE
+    b.postal_code_id = p.postal_code_id
+    AND b.business_id IN(SELECT business_id FROM Reviews
+        group by business_id having count(business_id)>1);
+        
+# Takes too long
+--Query 15: List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
+
+SELECT
+    Distinct(b.name)
+FROM
+    Business B, attr_goodformeal G, attr_goodformeal_map GM, Open_at O
+WHERE
+    b.is_open = 1
+    AND b.stars >= 4.5
+    AND b.business_id = g.business_id
+    AND g.sub_attr_id = gm.sub_attr_id
+    AND gm.sub_attr_name = 'brunch'
+    AND b.business_id = O.business_id
+    AND o.day_id IN (0,1);
+
+--Query 17: Compute the difference between the average 'star' ratings (use the reviews for each business to compute its average star rating) of businesses considered 'good for dinner' with a (1) "divey" and (2) an "upscale" ambience.
+
+--Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
+
+
+
 
 
 
