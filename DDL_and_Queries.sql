@@ -229,6 +229,7 @@ WHERE
 
 --Query 3: What is the maximum number of categories assigned to a business? Show the business name and the
 --        previously described count.
+-- select first for improved version
 select count(cat_id) as cat_count,business_id from category_map group by business_id order by cat_count desc fetch first 1 rows only;
 
 -- another way
@@ -240,21 +241,22 @@ select businessID, catCnt from catcnt where catCnt = (select max(catCnt) from ca
 
 --Query 4: How many businesses are labelled as "Dry Cleaners" or “Dry Cleaning”?
 Select 
- 	Count(Distinct)
+ 	Count(Business_id) 
 From 
-	Has_Category
-Group By 
-	Business_id
-Where cat_id = ( Select cat_id from categories cat where cat.cat_name = "Dry cleaners" OR cat.cat_name = "Dry cleaning")
+	Category_map mapi , CATEGORY cat
+Where 
+mapi.cat_id = cat.cat_id and mapi.cat_name = 'dry cleaning' or mapi.cat_name = 'dry cleaners'
 
 --Query 5: Find the overall number of reviews for all the businesses that have more than 150 reviews and least any 2 dietary restriction categories
+-- indexing to speed up
 SELECT
-	SUM (Review_Count)
+	SUM(Review_Count)
 FROM 
-	Business B
+	Business B,
 	Attr_DietaryRestrictions A
-having 
-	B.Review_Count > 150 AND  B.Business_id = A.Business_id AND COUNT(A.Business_id) > 2
+where
+	B.Review_Count > 150 AND B.Business_id IN ( Select business_id from Attr_DietaryRestrictions 
+    group by business_id having count(business_id)>1)
 
 ---Query 6
 with userFriends(userId, friendsCnt) as
@@ -267,27 +269,25 @@ select count(*) as friendsCnt, userId from userFriends group by userId order by 
 
 --Query 7: Show the business name, number of stars, and the business review count of the top-5 businesses based
 --         on their review count that are currently open in the city of San Diego.
+--issue with the null values in the Postal_code table 
+
 Select
 	Name, Stars, Review_Count
 FROM  
-	Business 
-	has_city
-Where 
-	B.is_open = TRUE AND has_city.business_id = Business.business_id AND has_city.city= San Diego
-Order By limit 5 
-	Review_Count DESC  
+	Business B, Postal_code P
+where
+    B.is_open = 1 AND P.city= 'San diego' AND B.postal_code_id = P.postal_code_id order by Review_Count DESC fetch first 5 rows only
+ 
 
 --Query 8: Show the state name and the number of businesses for the state with the highest number of businesses.
--- using indexes to speed up the lookup 
+
 SELECT
 	State,
-	COUNT()
+	COUNT(Business_id) as compte
 FROM
-	Business
-GROUP BY
-	State
-
-ORDER BY LIMIT 1 
+	Postal_code P, Business B
+Where B.postal_code_id = P.postal_code_id
+GROUP BY P.State order by COUNT(*) DESC fetch first 1 rows only 
 	COUNT() DESC
 
 --Query 9: Find the total average of “average star” of elite users, grouped by the year in which they started to be
@@ -302,36 +302,27 @@ select eliteYear, avg(eliteCnt) from eliteAvg group by (eliteYear);
 --          city of New York.
 
 Select name 
-
-from Business 
-
-Where is_open = TRUE and Business_id IN (
-
+from Business B
+Where B.is_open = 1 and Business_id IN (
 Select 
 	Business_id
 From 
 	Reviews 
 Group by 
 	Business_id
-Order by Limit 10 
-	PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY stars DESC)
-)									
+Order by 
+	PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY stars DESC) fetch first 10 rows only )								
 
 --Query 11: Find and show the minimum, maximum, mean, and median number of categories per business.
 --			Show the final statistic (4 numbers respectively, aggregated over all the businesses)  
 SELECT
-AVG(COUNT()) AS average
-MAX(COUNT()) AS maximum
-MIN(COUNT()) AS minimum 
-PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY COUNT() DESC) 
-
+AVG(COUNT(cat_id)) AS averages,
+MAX(COUNT(cat_id)) AS maxi,
+MIN(COUNT(cat_id)) AS mini ,
+PERCENTILE_CONT(0.5)WITHIN GROUP(ORDER BY COUNT(cat_id) DESC) as medianito
 FROM
-SELECT
-	Count()
-FROM
-	Has_Category
-GROUP BY
-	Business_id)
+Category cat
+group by cat.business_id
 --Query 12: Find the businesses (show 'name', 'stars', 'review count') in the city of Las Vegas possessing 'valet' parking
 --and open between '19:00' and '23:00' hours on a Friday.
 and open between '19:00' and '23:00' hours on a Friday.
