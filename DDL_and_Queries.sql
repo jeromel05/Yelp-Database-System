@@ -1,13 +1,54 @@
 /* Entity desccriptions */
 
-CREATE TABLE Attr_Ambience_map (
+CREATE TABLE Attr_Ambience (
     Business_id CHAR(22),
  	Sub_Attr_id INTEGER,
     PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
 )
 
-CREATE TABLE Attr_Ambience (
+CREATE TABLE Attr_BusinessParking (
+    Business_id CHAR(22),
+ 	Sub_Attr_id INTEGER,
+    PRIMARY KEY (Business_id, Sub_Attr_id),
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
+)
+
+CREATE TABLE Attr_DietaryRestrictions (
+    Business_id CHAR(22),
+ 	Sub_Attr_id INTEGER,
+    PRIMARY KEY (Business_id, Sub_Attr_id),
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
+)
+
+CREATE TABLE Attr_GoodForMeal (
+    Business_id CHAR(22),
+ 	Sub_Attr_id INTEGER,
+    PRIMARY KEY (Business_id, Sub_Attr_id),
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
+)
+
+CREATE TABLE Attr_Music (
+    Business_id CHAR(22),
+ 	Sub_Attr_id INTEGER,
+    PRIMARY KEY (Business_id, Sub_Attr_id),
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
+)
+
+CREATE TABLE Attr_NoiseLevel (
+    Business_id CHAR(22),
+ 	Sub_Attr_id INTEGER,
+    PRIMARY KEY (Business_id, Sub_Attr_id),
+    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id),
+    FOREIGN KEY (Business_id) references Business(Business_id)
+)
+
+CREATE TABLE Attr_Ambience_map (
     Sub_Attr_id INTEGER,
  	Sub_Attr_name VARCHAR(50),
     UNIQUE (Sub_Attr_name),
@@ -15,13 +56,6 @@ CREATE TABLE Attr_Ambience (
 )
 
 CREATE TABLE Attr_BusinessParking_map (
-    Business_id CHAR(22),
- 	Sub_Attr_id INTEGER,
-    PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
-)
-
-CREATE TABLE Attr_BusinessParking (
     Sub_Attr_id INTEGER,
  	Sub_Attr_name VARCHAR(50),
     UNIQUE (Sub_Attr_name),
@@ -29,56 +63,27 @@ CREATE TABLE Attr_BusinessParking (
 )
 
 CREATE TABLE Attr_DietaryRestrictions_map (
-    Business_id CHAR(22),
- 	Sub_Attr_id INTEGER,
-    PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
+    Sub_Attr_id INTEGER,
+ 	Sub_Attr_name VARCHAR(50),
+    UNIQUE (Sub_Attr_name),
+    PRIMARY KEY (Sub_Attr_id)
 )
 
 CREATE TABLE Attr_GoodForMeal_map (
-    Business_id CHAR(22),
- 	Sub_Attr_id INTEGER,
-    PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
+    Sub_Attr_id INTEGER,
+ 	Sub_Attr_name VARCHAR(50),
+    UNIQUE (Sub_Attr_name),
+    PRIMARY KEY (Sub_Attr_id)
 )
 
 CREATE TABLE Attr_Music_map (
-    Business_id CHAR(22),
- 	Sub_Attr_id INTEGER,
-    PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
+    Sub_Attr_id INTEGER,
+ 	Sub_Attr_name VARCHAR(50),
+    UNIQUE (Sub_Attr_name),
+    PRIMARY KEY (Sub_Attr_id)
 )
 
 CREATE TABLE Attr_NoiseLevel_map (
-    Business_id CHAR(22),
- 	Sub_Attr_id INTEGER,
-    PRIMARY KEY (Business_id, Sub_Attr_id),
-    FOREIGN KEY (Sub_Attr_id) references Attr_Ambience(Sub_Attr_id)
-)
-
-
-CREATE TABLE Attr_DietaryRestrictions (
-    Sub_Attr_id INTEGER,
- 	Sub_Attr_name VARCHAR(50),
-    UNIQUE (Sub_Attr_name),
-    PRIMARY KEY (Sub_Attr_id)
-)
-
-CREATE TABLE Attr_GoodForMeal (
-    Sub_Attr_id INTEGER,
- 	Sub_Attr_name VARCHAR(50),
-    UNIQUE (Sub_Attr_name),
-    PRIMARY KEY (Sub_Attr_id)
-)
-
-CREATE TABLE Attr_Music (
-    Sub_Attr_id INTEGER,
- 	Sub_Attr_name VARCHAR(50),
-    UNIQUE (Sub_Attr_name),
-    PRIMARY KEY (Sub_Attr_id)
-)
-
-CREATE TABLE Attr_NoiseLevel (
     Sub_Attr_id INTEGER,
  	Sub_Attr_name VARCHAR(50),
     UNIQUE (Sub_Attr_name),
@@ -100,14 +105,14 @@ CREATE TABLE Business (
     FOREIGN KEY (Postal_Code_id) references Postal_Code(Postal_Code_id)
 )
 
-CREATE TABLE Category (
+CREATE TABLE Category_map (
     Category_id INTEGER,
  	Category_name VARCHAR(200),
     UNIQUE (Category_name),
     PRIMARY KEY (Category_id)
 )
 
-CREATE TABLE Category_map (
+CREATE TABLE Category (
     Category_id INTEGER,
  	Business_id CHAR(22),
     PRIMARY KEY (Business_id, Category_id),
@@ -214,12 +219,13 @@ FROM
 	Users
 
 --Query 2: How many businesses are in the provinces of Québec and Alberta?
-Select 
-	Count(*)
-From 
-	Business B 
-Where 	
-	Postal_code.postal_code_id = B.postal_code_id AND Postal_Code_id.state = "AB" or Postal_code.Postal_Code_id = "QC"
+SELECT 
+	count(*)
+FROM 
+	Business B, Postal_code P
+WHERE 	
+	P.postal_code_id = B.postal_code_id AND P.state = 'AB' OR P.state = 'QC';
+
 
 --Query 3: What is the maximum number of categories assigned to a business? Show the business name and the
 --        previously described count.
