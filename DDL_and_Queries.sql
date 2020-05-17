@@ -370,11 +370,13 @@ WHERE
     
 
 
---3 - List the “name”, “star” rating, and “review_count” of the businesses that are tagged as “Irish Pub” and offer “live” music.
+--Query 3: List the “name”, “star” rating, and “review_count” of the businesses that are tagged as “Irish Pub” and offer “live” music.
+
 SELECT name,stars,review_count FROM business b JOIN attr_music m ON b.business_id = m.business_id 
 JOIN category c ON b.business_id = c.business_id 
 WHERE m.sub_attr_id IN (SELECT sub_attr_id FROM attr_music_map WHERE sub_attr_name like 'live') 
 AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub');
+
 
 --Query 5: Find the average rating and number of reviews for all businesses which have at least two categories and more than (or equal to) one parking type.
 
@@ -387,8 +389,10 @@ WHERE
         group by business_id having count(business_id)>=1)
     AND B.Business_id IN(SELECT business_id FROM Category
         group by business_id having count(business_id)>1)
+        
 
---6 - What is the fraction of businesses (of the total number of businesses) that are considered "good for late night meals"?
+--Query 6: What is the fraction of businesses (of the total number of businesses) that are considered "good for late night meals"?
+
 SELECT A.late_meal_count/B.total_count, A.late_meal_count,B.total_count FROM
 (SELECT DISTINCT COUNT(*) AS late_meal_count  
 FROM business b JOIN attr_goodformeal a ON b.business_id = a.business_id  
@@ -407,7 +411,7 @@ FROM
     GROUP BY Business_id having COUNT(DISTINCT(user_id))> 1030;
     
 
---9 - Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
+--Query 9: Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
 SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
 ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
 
@@ -425,7 +429,7 @@ WHERE
 
 
 
---12 - Find the number of businesses for which every user that gave the business a positive tip (containing 'awesome') has also given some business a positive tip within the previous day.
+--Query 12: Find the number of businesses for which every user that gave the business a positive tip (containing 'awesome') has also given some business a positive tip within the previous day.
 SELECT COUNT(*) FROM
 (SELECT A.business_id as bid, count(*) as positive_count  FROM
 (SELECT CAST(posted_date AS DATE) as first_date, business_id ,user_id, tip_id FROM tips where UPPER(tip_text) like '%AWESOME%')A 
@@ -433,6 +437,14 @@ INNER JOIN (SELECT posted_date-1 AS prv_date ,user_id, tip_id FROM tips where UP
 ON A.first_date=B.prv_date AND A.user_id=B.user_id group by A.business_id)C 
 INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_text) like '%AWESOME%' group by business_id) D on D.business_id=C.bid AND D.full_count=C.positive_count
 ;
+
+--Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
+#Takes a long time
+SELECT AVG(re.useful) - AVG(rs.useful)
+FROM Reviews RS, Reviews RE
+LEFT JOIN Elite E ON (re.user_id = e.user_id)
+WHERE rs.user_id NOT IN (SELECT el.user_id FROM Elite el);
+
 
 # by wenuka
 --15 - List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
@@ -446,7 +458,6 @@ AND b.is_open > 0
 AND a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'brunch%' )
 AND (o.day_id=6 OR o.day_id=0)
 
-# Takes too long
 --Query 15: List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
 
 SELECT
@@ -460,10 +471,26 @@ WHERE
     AND g.sub_attr_id = gm.sub_attr_id
     AND gm.sub_attr_name = 'brunch'
     AND b.business_id = O.business_id
-    AND o.day_id IN (0,1);
+    AND o.day_id IN (0,6);
 
 --Query 17: Compute the difference between the average 'star' ratings (use the reviews for each business to compute its average star rating) of businesses considered 'good for dinner' with a (1) "divey" and (2) an "upscale" ambience.
 
+SELECT AVG(rd.stars) - AVG(ru.stars)
+
+FROM Reviews RD, Reviews RU, attr_ambience A1, attr_ambience A2, attr_goodformeal G1, attr_goodformeal G2
+LEFT JOIN attr_goodformeal G1 ON (g2.business_id = rd.business_id)
+LEFT JOIN attr_goodformeal G2 ON (g2.business_id = ru.business_id)
+
+WHERE
+    g1.business_id = rd.business_id
+    AND g2.business_id = ru.business_id
+    AND a1.business_id = rd.business_id
+    AND a2.business_id = ru.business_id
+    AND g1.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'dinner%')
+    AND g2.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'dinner%')
+    AND a1.sub_attr_id IN ( SELECT sub_attr_id FROM attr_ambience_map where sub_attr_name like 'divey%')
+    AND a2.sub_attr_id IN ( SELECT sub_attr_id FROM attr_ambience_map where sub_attr_name like 'upscale%');
+    
 
 --18- Find the number of cities that satisfy the following: the city has at least five businesses and each of the top-5 (in terms of number of reviews) businesses in the city has a minimum of 100 reviews.
 SELECT count(*) from 
@@ -473,4 +500,24 @@ join postal_code p on (p.postal_code_id = A.postal_code_id) group by p.city havi
 ;
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
+#incomplete 
+
+SELECT DISTINCT(R.user_id)
+FROM Business B
+LEFT JOIN Reviews R ON(R.business_id = B.business_id)
+
+WHERE
+    B.business_id IN (  SELECT business_id 
+                        FROM (SELECT b1.business_id FROM Business B1 ORDER BY b1.review_count DESC)
+                        WHERE ROWNUM < 11)
+    AND R.user_id IN(   SELECT user_id 
+                        FROM (SELECT r3.user_id FROM Reviews R3 GROUP BY r3.user_id ORDER BY COUNT(*) DESC)
+                        WHERE ROWNUM < 4)
+    GROUP BY R.business_id;
+    
+    
+    
+
+
+
 
