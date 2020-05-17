@@ -136,7 +136,8 @@ CREATE TABLE FRIENDS (
 )
 
 CREATE TABLE Hours (
-	Hours VARCHAR(8), #contains both open and closing time, with dash, first open and then close
+    Opening_time VARCHAR(8), 
+	Closing_time VARCHAR(8), 
 	Hours_id INTEGER,
 	PRIMARY KEY (Hours_id)
 )
@@ -153,8 +154,8 @@ CREATE TABLE Open_at (
 CREATE TABLE Postal_code (
 	Postal_code_id INTEGER,
     Postal_code VARCHAR(10),
-    City VARCHAR(10),
-    State VARCHAR(2),
+    City VARCHAR(50),
+    State VARCHAR(3),
 	UNIQUE (Postal_code, City, State),
 	PRIMARY KEY (Postal_code_id)
 )
@@ -230,14 +231,14 @@ WHERE
 --Query 3: What is the maximum number of categories assigned to a business? Show the business name and the
 --        previously described count.
 -- select first for improved version
-select count(cat_id) as cat_count,business_id from category_map group by business_id order by cat_count desc fetch first 1 rows only;
+select count(cat_id) as cat_count,business_id from category group by business_id order by cat_count desc fetch first 1 rows only;
 
 -- another way
-with catcnt(businessId, catCnt) as
-(
-select count(cat_id) as cat_count,business_id from category_map group by business_id 
-)
-select businessID, catCnt from catcnt where catCnt = (select max(catCnt) from catCnt)
+-- with catcnt(businessId, catCnt) as
+-- (
+-- select count(cat_id) as cat_count,business_id from category_map group by business_id 
+-- )
+-- select businessID, catCnt from catcnt where catCnt = (select max(catCnt) from catCnt)
 
 --Query 4: How many businesses are labelled as "Dry Cleaners" or “Dry Cleaning”?
 Select 
@@ -259,13 +260,13 @@ where
     group by business_id having count(business_id)>1)
 
 ---Query 6
-with userFriends(userId, friendsCnt) as
+with userFriends(friendsCnt, userId) as
 (
 (select count(*) as countV, user_id1 as user_id from friends group by (user_id1))
 UNION
 (select count(*) as countV, user_id2 as user_id from friends group by (user_id2)) 
 )
-select count(*) as friendsCnt, userId from userFriends group by userId order by friendsCnt desc FETCH FIRST 10 ROWS ONLY;
+select friendsCnt, userId from userFriends order by friendsCnt desc FETCH FIRST 10 ROWS ONLY;
 
 --Query 7: Show the business name, number of stars, and the business review count of the top-5 businesses based
 --         on their review count that are currently open in the city of San Diego.
@@ -292,11 +293,12 @@ GROUP BY P.State order by COUNT(*) DESC fetch first 1 rows only
 
 --Query 9: Find the total average of “average star” of elite users, grouped by the year in which they started to be
 --         elite users. Display the required averages next to the appropriate years.
-with eliteAvg(eliteYear, eliteCnt) as
-(
-select elite_year ,count(*)from elite group by (elite_year)
-)
-select eliteYear, avg(eliteCnt) from eliteAvg group by (eliteYear);
+select Star_table.elite_year, avg(Star_table.stars) as avg_stars_for_the_year 
+from (select A.e_year as elite_year, U.avg_stars as stars 
+    from (select user_id, min(elite_year) as e_year from elite group by (user_id)
+        )A
+    join users U on U.user_id=A.user_id
+)Star_table group by (Star_table.elite_year)
 
 --Query 10: List the names of the top-10 businesses based on the median “star” rating, that are currently open in the
 --          city of New York.
@@ -335,13 +337,13 @@ LEFT JOIN postal_code p
 ON (b.postal_code_id = p.postal_code_id) 
 LEFT JOIN attr_businessparking a 
 ON (a.business_id = b.business_id)
-LEFT JOIN opens_at o
+LEFT JOIN open_at o
 ON (o.business_id = b.business_id)
 where p.city = 'Las Vegas' 
 AND a.sub_attr_id = 1 
 AND o.day_id=5 
-AND o.opening_hour_id <= 19*60 
-AND o.closing_hour_id >= 23*60
+AND o.hours_id <= 19*60000 
+AND MOD(o.hours_id , 10000) >= 23*60;
 
 
 --------------------------------- DELIVERABLE 3 ------------------------
