@@ -368,7 +368,14 @@ WHERE
     AND n2.sub_attr_id = nm2.sub_attr_id
     AND (nm2.sub_attr_name = 'average' OR nm2.sub_attr_name = 'quiet');
     
-    
+
+
+--3 - List the “name”, “star” rating, and “review_count” of the businesses that are tagged as “Irish Pub” and offer “live” music.
+SELECT name,stars,review_count FROM business b JOIN attr_music m ON b.business_id = m.business_id 
+JOIN category c ON b.business_id = c.business_id 
+WHERE m.sub_attr_id IN (SELECT sub_attr_id FROM attr_music_map WHERE sub_attr_name like 'live') 
+AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub');
+
 --Query 5: Find the average rating and number of reviews for all businesses which have at least two categories and more than (or equal to) one parking type.
 
 SELECT
@@ -380,7 +387,17 @@ WHERE
         group by business_id having count(business_id)>=1)
     AND B.Business_id IN(SELECT business_id FROM Category
         group by business_id having count(business_id)>1)
-        
+
+--6 - What is the fraction of businesses (of the total number of businesses) that are considered "good for late night meals"?
+SELECT A.late_meal_count/B.total_count, A.late_meal_count,B.total_count FROM
+(SELECT DISTINCT COUNT(*) AS late_meal_count  
+FROM business b JOIN attr_goodformeal a ON b.business_id = a.business_id  
+WHERE a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'latenight%' )
+)A
+JOIN
+(SELECT count(*) as total_count from business)B ON 1=1;
+
+
 --Query 8: Find the ids of the businesses that have been reviewed by more than 1030 unique users.
 
 SELECT
@@ -389,6 +406,11 @@ FROM
     Reviews R
     GROUP BY Business_id having COUNT(DISTINCT(user_id))> 1030;
     
+
+--9 - Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
+SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
+ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
+
 
 --Query 11: Find and display all the cities that satisfy the following: each business in the city has at least two reviews.
 
@@ -400,7 +422,30 @@ WHERE
     b.postal_code_id = p.postal_code_id
     AND b.business_id IN(SELECT business_id FROM Reviews
         group by business_id having count(business_id)>1);
-        
+
+
+
+--12 - Find the number of businesses for which every user that gave the business a positive tip (containing 'awesome') has also given some business a positive tip within the previous day.
+SELECT COUNT(*) FROM
+(SELECT A.business_id as bid, count(*) as positive_count  FROM
+(SELECT CAST(posted_date AS DATE) as first_date, business_id ,user_id, tip_id FROM tips where UPPER(tip_text) like '%AWESOME%')A 
+INNER JOIN (SELECT posted_date-1 AS prv_date ,user_id, tip_id FROM tips where UPPER(tip_text) like '%AWESOME%')  B 
+ON A.first_date=B.prv_date AND A.user_id=B.user_id group by A.business_id)C 
+INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_text) like '%AWESOME%' group by business_id) D on D.business_id=C.bid AND D.full_count=C.positive_count
+;
+
+# by wenuka
+--15 - List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
+SELECT DISTINCT name 
+FROM business b 
+LEFT JOIN attr_businessparking a ON (a.business_id = b.business_id)
+LEFT JOIN attr_goodformeal a ON b.business_id = a.business_id  
+LEFT JOIN open_at o ON (o.business_id = b.business_id)
+where b.stars >= 4.5
+AND b.is_open > 0
+AND a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'brunch%' )
+AND (o.day_id=6 OR o.day_id=0)
+
 # Takes too long
 --Query 15: List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
 
@@ -419,19 +464,13 @@ WHERE
 
 --Query 17: Compute the difference between the average 'star' ratings (use the reviews for each business to compute its average star rating) of businesses considered 'good for dinner' with a (1) "divey" and (2) an "upscale" ambience.
 
+
+--18- Find the number of cities that satisfy the following: the city has at least five businesses and each of the top-5 (in terms of number of reviews) businesses in the city has a minimum of 100 reviews.
+SELECT count(*) from 
+(SELECT count(*) from 
+(SELECT business_id,review_count,postal_code_id from business where review_count >=100)A
+join postal_code p on (p.postal_code_id = A.postal_code_id) group by p.city having count(*)>=5)B
+;
+
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
