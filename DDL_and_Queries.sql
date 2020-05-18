@@ -514,6 +514,14 @@ WHERE
                         FROM (SELECT r3.user_id FROM Reviews R3 GROUP BY r3.user_id ORDER BY COUNT(*) DESC)
                         WHERE ROWNUM < 4)
     GROUP BY R.business_id;
+
+-- Query 20 by Wenuka
+SELECT DISTINCT R.user_id, u.review_count 
+from reviews R 
+LEFT JOIN users U on R.user_id = U.user_id 
+where business_id IN (SELECT b1.business_id FROM Business B1 ORDER BY b1.review_count DESC FETCH FIRST 10 ROWS ONLY) 
+ORDER BY u.review_count DESC FETCH FIRST 3 ROWS ONLY
+;
     
     
     
