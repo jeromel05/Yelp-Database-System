@@ -333,11 +333,11 @@ group by cat.business_id
 
 SELECT name,stars, review_count 
 FROM business b 
-LEFT JOIN postal_code p 
+JOIN postal_code p 
 ON (b.postal_code_id = p.postal_code_id) 
-LEFT JOIN attr_businessparking a 
+JOIN attr_businessparking a 
 ON (a.business_id = b.business_id)
-LEFT JOIN open_at o
+JOIN open_at o
 ON (o.business_id = b.business_id)
 where p.city = 'Las Vegas' 
 AND a.sub_attr_id = 1 
@@ -450,9 +450,8 @@ WHERE rs.user_id NOT IN (SELECT el.user_id FROM Elite el);
 --15 - List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
 SELECT DISTINCT name 
 FROM business b 
-LEFT JOIN attr_businessparking a ON (a.business_id = b.business_id)
-LEFT JOIN attr_goodformeal a ON b.business_id = a.business_id  
-LEFT JOIN open_at o ON (o.business_id = b.business_id)
+JOIN attr_goodformeal a ON b.business_id = a.business_id  
+JOIN open_at o ON (o.business_id = b.business_id)
 where b.stars >= 4.5
 AND b.is_open > 0
 AND a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'brunch%' )
@@ -518,7 +517,7 @@ WHERE
 -- Query 20 by Wenuka
 SELECT DISTINCT R.user_id, u.review_count 
 from reviews R 
-LEFT JOIN users U on R.user_id = U.user_id 
+JOIN users U on R.user_id = U.user_id 
 where business_id IN (SELECT b1.business_id FROM Business B1 ORDER BY b1.review_count DESC FETCH FIRST 10 ROWS ONLY) 
 ORDER BY u.review_count DESC FETCH FIRST 3 ROWS ONLY
 ;
