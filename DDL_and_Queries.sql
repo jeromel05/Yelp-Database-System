@@ -517,6 +517,15 @@ ON A.first_date=B.prv_date AND A.user_id=B.user_id group by A.business_id)C
 INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_text) like '%AWESOME%' group by business_id) D on D.business_id=C.bid AND D.full_count=C.positive_count
 ;
 
+-- 13. Find the maximum number of different businesses any user has ever reviewed
+Select 
+    count( Distinct Business_id) as reviewed
+from
+    Reviews R
+group by 
+    User_id
+order by reviewed DESC fetch first 1 rows only 
+
 --Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
 #Takes a long time
 SELECT AVG(re.useful) - AVG(rs.useful)
@@ -609,7 +618,7 @@ bottom as ( select city,sum(review_count) as sumrest from
 select * from top100 topo inner join bottom botto on topo.city=botto.city and topo.sumtop>=botto.sumrest*2
 
 
-    
+
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
 #incomplete 
