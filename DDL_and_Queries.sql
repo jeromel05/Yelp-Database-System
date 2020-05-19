@@ -512,9 +512,17 @@ ON A.first_date=B.prv_date AND A.user_id=B.user_id group by A.business_id)C
 INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_text) like '%AWESOME%' group by business_id) D on D.business_id=C.bid AND D.full_count=C.positive_count
 ;
 
+--- 13. Find the maximum number of different businesses any user has ever reviewed
+Select 
+    count( Distinct Business_id) as reviewed
+from
+    Reviews R
+group by 
+    User_id
+order by reviewed DESC fetch first 1 rows only 
+                    
 --Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
 #Takes a long time
-
 
 # by wenuka
 --15 - List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
