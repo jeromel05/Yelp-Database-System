@@ -358,6 +358,7 @@ Where
     B.Postal_Code_id = P.postal_code_id and P.State= 'ON' and review_count > 5 and stars > 4.2
 
 --Query 2: What is the average difference in review scores for businesses that are considered "good for dinner" that have noise levels "loud" or "very loud", ---        compared to ones with noise levels "average" or "quiet"?
+
 SELECT BB2.avg_star - BB1.avg_star
 FROM
     (SELECT  AVG(B1.stars) as avg_star
@@ -373,7 +374,6 @@ FROM
     ))BB2;
     
 
-
 --Query 3: List the “name”, “star” rating, and “review_count” of the businesses that are tagged as “Irish Pub” and offer “live” music.
 
 SELECT name,stars,review_count FROM business b JOIN attr_music m ON b.business_id = m.business_id 
@@ -384,7 +384,7 @@ AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub'
 --Query 4 : Find the average number of attribute “useful” of the users whose average rating falls in the following 2
 -           ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
 
--- should iimplement a different query for elite and regular users
+-- should implement a different query for elite and regular users
 Select  avg(review_count) as avgEL24_avgEL45_avgreg24_avgreg45
 From 
     Users U , Elite E 
@@ -431,6 +431,7 @@ WHERE a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_
 JOIN
 (SELECT count(*) as total_count from business)B ON 1=1;
 
+                     
 --Query 7 : Find the names of the cities where all businesses are closed on Sundays 
 
 Select q2.city
@@ -513,6 +514,7 @@ INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_
 ;
 
 --- 13. Find the maximum number of different businesses any user has ever reviewed
+                     
 Select 
     count( Distinct Business_id) as reviewed
 from
@@ -520,6 +522,7 @@ from
 group by 
     User_id
 order by reviewed DESC fetch first 1 rows only 
+                     
                     
 --Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
 #Takes a long time
@@ -535,6 +538,7 @@ AND b.is_open > 0
 AND a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_attr_name like 'brunch%' )
 AND (o.day_id=6 OR o.day_id=0)
 
+#by Jerome                     
 --Query 15: List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
 
 SELECT
@@ -550,10 +554,10 @@ WHERE
     AND b.business_id = O.business_id
     AND o.day_id IN (0,6);
 
-    --16    List the 'name', 'star' rating, and 'review_count' of the top-5 businesses in the city of 'los angeles' based
---      on the average 'star' rating that serve both 'vegetarian' and 'vegan' food and open between '14:00' and
---      '16:00' hours. Note: The average star rating should be computed by taking the mean of 'star' ratings
---      provided in each review of this business.
+--16    List the 'name', 'star' rating, and 'review_count' of the top-5 businesses in the city of 'los angeles' based
+-       on the average 'star' rating that serve both 'vegetarian' and 'vegan' food and open between '14:00' and
+-       '16:00' hours. Note: The average star rating should be computed by taking the mean of 'star' ratings
+-       provided in each review of this business.
 
 
 --Query 17: Compute the difference between the average 'star' ratings (use the reviews for each business to compute its average star rating) of businesses considered 'good for dinner' with a (1) "divey" and (2) an "upscale" ambience.
@@ -574,16 +578,17 @@ WHERE
     
 
 --18- Find the number of cities that satisfy the following: the city has at least five businesses and each of the top-5 (in terms of number of reviews) businesses in the city has a minimum of 100 reviews.
-SELECT count(*) from 
-(SELECT count(*) from 
-(SELECT business_id,review_count,postal_code_id from business where review_count >=100)A
-join postal_code p on (p.postal_code_id = A.postal_code_id) group by p.city having count(*)>=5)B
+                     
+SELECT count(*) 
+from (SELECT count(*) 
+     from (SELECT business_id,review_count,postal_code_id from business where review_count >=100)A
+      join postal_code p on (p.postal_code_id = A.postal_code_id) group by p.city having count(*)>=5)B
 ;
 
 
 --19    Find the names of the cities that satisfy the following: the combined number of reviews for the top-100
---      (by reviews) businesses in the city is at least double the combined number of reviews for the rest of the
---      businesses in the city.
+-       (by reviews) businesses in the city is at least double the combined number of reviews for the rest of the
+-       businesses in the city.
 
 with top100 as ( select city,sum(review_count) as sumtop from
    (SELECT Business_id,review_count, city, ROW_NUMBER() 
@@ -605,7 +610,6 @@ bottom as ( select city,sum(review_count) as sumrest from
     
 select * from top100 topo inner join bottom botto on topo.city=botto.city and topo.sumtop>=botto.sumrest*2
 
-    
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
 #incomplete 
