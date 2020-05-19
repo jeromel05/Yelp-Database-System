@@ -358,24 +358,19 @@ Where
     B.Postal_Code_id = P.postal_code_id and P.State= 'ON' and review_count > 5 and stars > 4.2
 
 --Query 2: What is the average difference in review scores for businesses that are considered "good for dinner" that have noise levels "loud" or "very loud", ---        compared to ones with noise levels "average" or "quiet"?
-SELECT
-    AVG(b2.stars) - AVG(b1.stars)
+SELECT BB2.avg_star - BB1.avg_star
 FROM
-    Business B1, attr_goodformeal G1, attr_goodformeal_map GM1, attr_noiselevel N1, attr_noiselevel_map NM1, 
-    Business B2, attr_noiselevel N2, attr_noiselevel_map NM2, attr_goodformeal G2, attr_goodformeal_map GM2
-WHERE
-    b1.business_id = g1.business_id 
-    AND b1.business_id = n1.business_id 
-    AND b2.business_id = g2.business_id 
-    AND b2.business_id = n2.business_id 
-    AND gm1.sub_attr_id = g1.sub_attr_id 
-    AND gm2.sub_attr_id = g2.sub_attr_id 
-    AND gm1.sub_attr_name = 'dinner' 
-    AND gm2.sub_attr_name = 'dinner' 
-    AND n1.sub_attr_id = nm1.sub_attr_id 
-    AND (nm1.sub_attr_name = 'loud' OR nm1.sub_attr_name = 'very_loud')
-    AND n2.sub_attr_id = nm2.sub_attr_id
-    AND (nm2.sub_attr_name = 'average' OR nm2.sub_attr_name = 'quiet');
+    (SELECT  AVG(B1.stars) as avg_star
+        FROM business B1 JOIN attr_goodformeal G1 ON b1.business_id=g1.business_id JOIN attr_noiselevel N1 ON b1.business_id=n1.business_id  
+        where g1.sub_attr_id IN (SELECT sub_attr_id FROM attr_goodformeal_map WHERE sub_attr_name like 'dinner') 
+        AND n1.sub_attr_id IN (SELECT sub_attr_id FROM attr_noiselevel_map WHERE sub_attr_name like '%loud')
+    )BB1,
+    (SELECT  AVG(B1.stars) as avg_star
+     FROM business B1 JOIN attr_goodformeal G1 ON b1.business_id=g1.business_id JOIN attr_noiselevel N1 ON b1.business_id=n1.business_id  
+     where g1.sub_attr_id IN (SELECT sub_attr_id FROM attr_goodformeal_map WHERE sub_attr_name like 'dinner') 
+     AND (n1.sub_attr_id IN (SELECT sub_attr_id FROM attr_noiselevel_map WHERE sub_attr_name like 'average') 
+     OR n1.sub_attr_id IN (SELECT sub_attr_id FROM attr_noiselevel_map WHERE sub_attr_name like 'quiet')  
+    ))BB2;
     
 
 
@@ -386,8 +381,8 @@ JOIN category c ON b.business_id = c.business_id
 WHERE m.sub_attr_id IN (SELECT sub_attr_id FROM attr_music_map WHERE sub_attr_name like 'live') 
 AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub');
 
--- Query 4 : Find the average number of attribute “useful” of the users whose average rating falls in the following 2
---              ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
+--Query 4 : Find the average number of attribute “useful” of the users whose average rating falls in the following 2
+-           ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
 
 -- should iimplement a different query for elite and regular users
 Select  avg(review_count) as avgEL24_avgEL45_avgreg24_avgreg45
@@ -410,7 +405,6 @@ From
     Users U left join Elite E on U.user_id = E.user_id
 where 
  E.user_id is null and U.avg_stars>=4 and U.avg_stars <= 5
-
 
 
 
@@ -437,7 +431,7 @@ WHERE a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_
 JOIN
 (SELECT count(*) as total_count from business)B ON 1=1;
 
--- Query 7 : Find the names of the cities where all businesses are closed on Sundays 
+--Query 7 : Find the names of the cities where all businesses are closed on Sundays 
 
 Select q2.city
 from 
@@ -469,13 +463,14 @@ FROM
     
 
 --Query 9: Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
+                     
 SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
 ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
+                     
 
--- Query 10 : Find the top-10 (by number of stars) ids of businesses per state. Show the results per state, in a
---              descending order of number of stars
+--Query 10 : Find the top-10 (by number of stars) ids of businesses per state. Show the results per state, in a
+-            descending order of number of stars
 
- 
    WITH TOPTEN AS (
    SELECT Business_id, state, ROW_NUMBER() 
     over (
@@ -500,15 +495,15 @@ SELECT Business_id, city, ROW_NUMBER()
 SELECT
     Distinct(p.city)
 FROM
-    Business B, Postal_code P
+    Business B
+    LEFT JOIN Postal_code P ON (b.postal_code_id = p.postal_code_id)
 WHERE
-    b.postal_code_id = p.postal_code_id
-    AND b.business_id IN(SELECT business_id FROM Reviews
+    b.business_id IN(SELECT business_id FROM Reviews
         group by business_id having count(business_id)>1);
 
 
-
 --Query 12: Find the number of businesses for which every user that gave the business a positive tip (containing 'awesome') has also given some business a positive tip within the previous day.
+                     
 SELECT COUNT(*) FROM
 (SELECT A.business_id as bid, count(*) as positive_count  FROM
 (SELECT CAST(posted_date AS DATE) as first_date, business_id ,user_id, tip_id FROM tips where UPPER(tip_text) like '%AWESOME%')A 
@@ -517,21 +512,8 @@ ON A.first_date=B.prv_date AND A.user_id=B.user_id group by A.business_id)C
 INNER JOIN (SELECT count(*) as full_count,business_id FROM tips where UPPER(tip_text) like '%AWESOME%' group by business_id) D on D.business_id=C.bid AND D.full_count=C.positive_count
 ;
 
--- 13. Find the maximum number of different businesses any user has ever reviewed
-Select 
-    count( Distinct Business_id) as reviewed
-from
-    Reviews R
-group by 
-    User_id
-order by reviewed DESC fetch first 1 rows only 
-
 --Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
 #Takes a long time
-SELECT AVG(re.useful) - AVG(rs.useful)
-FROM Reviews RS, Reviews RE
-LEFT JOIN Elite E ON (re.user_id = e.user_id)
-WHERE rs.user_id NOT IN (SELECT el.user_id FROM Elite el);
 
 
 # by wenuka
@@ -571,8 +553,6 @@ WHERE
 SELECT AVG(rd.stars) - AVG(ru.stars)
 
 FROM Reviews RD, Reviews RU, attr_ambience A1, attr_ambience A2, attr_goodformeal G1, attr_goodformeal G2
-LEFT JOIN attr_goodformeal G1 ON (g2.business_id = rd.business_id)
-LEFT JOIN attr_goodformeal G2 ON (g2.business_id = ru.business_id)
 
 WHERE
     g1.business_id = rd.business_id
@@ -617,24 +597,23 @@ bottom as ( select city,sum(review_count) as sumrest from
     
 select * from top100 topo inner join bottom botto on topo.city=botto.city and topo.sumtop>=botto.sumrest*2
 
-
-
+    
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
 #incomplete 
 
-SELECT DISTINCT(R.user_id)
-FROM Business B
-LEFT JOIN Reviews R ON(R.business_id = B.business_id)
+SELECT U.user_id, U.review_count
+FROM Business B, Reviews R
+LEFT JOIN Users U ON(U.user_id = R.user_id)
 
 WHERE
-    B.business_id IN (  SELECT business_id 
+    R.business_id = B.business_id
+    AND B.business_id IN (  SELECT business_id 
                         FROM (SELECT b1.business_id FROM Business B1 ORDER BY b1.review_count DESC)
                         WHERE ROWNUM < 11)
-    AND R.user_id IN(   SELECT user_id 
-                        FROM (SELECT r3.user_id FROM Reviews R3 GROUP BY r3.user_id ORDER BY COUNT(*) DESC)
-                        WHERE ROWNUM < 4)
-    GROUP BY R.business_id;
+    AND U.user_id IN(   SELECT user_id 
+                        FROM (SELECT u3.user_id FROM Users U3 ORDER BY u3.review_count DESC)
+                        WHERE ROWNUM < 4);
 
 -- Query 20 by Wenuka
 SELECT DISTINCT R.user_id, u.review_count 
