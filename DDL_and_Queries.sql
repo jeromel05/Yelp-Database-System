@@ -472,8 +472,8 @@ FROM
 SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
 ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
 
--- Query 10 : Find the top-10 (by number of stars) ids of businesses per state. Show the results per state, in a
---              descending order of number of stars
+--Query 10 : Find the top-10 (by number of stars) ids of businesses per state. Show the results per state, in a
+--           descending order of number of stars
 
  
    WITH TOPTEN AS (
@@ -500,12 +500,11 @@ SELECT Business_id, city, ROW_NUMBER()
 SELECT
     Distinct(p.city)
 FROM
-    Business B, Postal_code P
+    Business B
+    LEFT JOIN Postal_code P ON (b.postal_code_id = p.postal_code_id)
 WHERE
-    b.postal_code_id = p.postal_code_id
-    AND b.business_id IN(SELECT business_id FROM Reviews
+    b.business_id IN(SELECT business_id FROM Reviews
         group by business_id having count(business_id)>1);
-
 
 
 --Query 12: Find the number of businesses for which every user that gave the business a positive tip (containing 'awesome') has also given some business a positive tip within the previous day.
@@ -608,24 +607,23 @@ bottom as ( select city,sum(review_count) as sumrest from
     
 select * from top100 topo inner join bottom botto on topo.city=botto.city and topo.sumtop>=botto.sumrest*2
 
-
     
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
 #incomplete 
 
-SELECT DISTINCT(R.user_id)
-FROM Business B
-LEFT JOIN Reviews R ON(R.business_id = B.business_id)
+SELECT U.user_id, U.review_count
+FROM Business B, Reviews R
+LEFT JOIN Users U ON(U.user_id = R.user_id)
 
 WHERE
-    B.business_id IN (  SELECT business_id 
+    R.business_id = B.business_id
+    AND B.business_id IN (  SELECT business_id 
                         FROM (SELECT b1.business_id FROM Business B1 ORDER BY b1.review_count DESC)
                         WHERE ROWNUM < 11)
-    AND R.user_id IN(   SELECT user_id 
-                        FROM (SELECT r3.user_id FROM Reviews R3 GROUP BY r3.user_id ORDER BY COUNT(*) DESC)
-                        WHERE ROWNUM < 4)
-    GROUP BY R.business_id;
+    AND U.user_id IN(   SELECT user_id 
+                        FROM (SELECT u3.user_id FROM Users U3 ORDER BY u3.review_count DESC)
+                        WHERE ROWNUM < 4);
 
 -- Query 20 by Wenuka
 SELECT DISTINCT R.user_id, u.review_count 
