@@ -221,11 +221,11 @@ FROM
 
 --Query 2: How many businesses are in the provinces of Québec and Alberta?
 SELECT 
-	count(*)
+    count(*)
 FROM 
-	Business B, Postal_code P
-WHERE 	
-	P.postal_code_id = B.postal_code_id AND P.state = 'AB' OR P.state = 'QC';
+    Business B, Postal_code P
+WHERE   
+    P.postal_code_id = B.postal_code_id AND (P.state = 'AB' OR P.state = 'QC');
 
 
 --Query 3: What is the maximum number of categories assigned to a business? Show the business name and the
@@ -283,13 +283,12 @@ where
 --Query 8: Show the state name and the number of businesses for the state with the highest number of businesses.
 
 SELECT
-	State,
-	COUNT(Business_id) as compte
+    State,
+    COUNT(Business_id) as compte
 FROM
-	Postal_code P, Business B
+    Postal_code P, Business B
 Where B.postal_code_id = P.postal_code_id
-GROUP BY P.State order by COUNT(*) DESC fetch first 1 rows only 
-	COUNT() DESC
+GROUP BY P.State order by compte DESC fetch first 1 rows only 
 
 --Query 9: Find the total average of “average star” of elite users, grouped by the year in which they started to be
 --         elite users. Display the required averages next to the appropriate years.
@@ -347,6 +346,16 @@ AND MOD(o.hours_id , 10000) >= 23*60;
 
 
 --------------------------------- DELIVERABLE 3 ------------------------
+-- Query 1: . What is the total number of businesses in the province of Ontario that have at least 6 reviews and a
+--            rating above 4.2?
+
+Select 
+    count(Business_id) as total 
+from 
+    Business B,
+    Postal_Code P
+Where 
+    B.Postal_Code_id = P.postal_code_id and P.State= 'ON' and review_count > 5 and stars > 4.2
 
 --Query 2: What is the average difference in review scores for businesses that are considered "good for dinner" that have noise levels "loud" or "very loud", ---        compared to ones with noise levels "average" or "quiet"?
 SELECT
@@ -377,6 +386,33 @@ JOIN category c ON b.business_id = c.business_id
 WHERE m.sub_attr_id IN (SELECT sub_attr_id FROM attr_music_map WHERE sub_attr_name like 'live') 
 AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub');
 
+-- Query 4 : Find the average number of attribute “useful” of the users whose average rating falls in the following 2
+--              ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
+
+-- should iimplement a different query for elite and regular users
+Select  avg(review_count) as avgEL24_avgEL45_avgreg24_avgreg45
+From 
+    Users U , Elite E 
+where 
+U.user_id = E.user_id and U.avg_stars >= 2 and U.avg_stars <4  union
+Select  avg(review_count)  
+From 
+    Users U , Elite E 
+where 
+U.user_id = E.user_id and  U.avg_stars>=4 and U.avg_Stars <= 5 union
+Select  avg(review_count) 
+From 
+    Users U left join Elite E on U.user_id = E.user_id 
+where 
+E.user_id is null and U.avg_stars >= 2 and U.avg_stars <4  union
+Select  avg(review_count) 
+From 
+    Users U left join Elite E on U.user_id = E.user_id
+where 
+ E.user_id is null and U.avg_stars>=4 and U.avg_stars <= 5
+
+
+
 
 --Query 5: Find the average rating and number of reviews for all businesses which have at least two categories and more than (or equal to) one parking type.
 
@@ -401,6 +437,27 @@ WHERE a.sub_attr_id IN ( SELECT sub_attr_id FROM attr_goodformeal_map where sub_
 JOIN
 (SELECT count(*) as total_count from business)B ON 1=1;
 
+-- Query 7 : Find the names of the cities where all businesses are closed on Sundays 
+
+Select q2.city
+from 
+(Select 
+    city, Count(B.business_id) as closed 
+from
+   Business B Inner Join Open_at O on O.business_id=B.Business_id  Inner join Postal_code P on P.postal_code_id
+   =B.postal_code_id 
+Where  
+    O.Day_id!=0
+group by 
+    city ) q1
+inner join (Select 
+    city, Count(B.business_id) as total 
+from
+   Business B Inner Join Open_at O on O.business_id=B.Business_id  Inner join Postal_code P on P.postal_code_id
+   =B.postal_code_id 
+group by 
+    city )q2  on (q1.closed = q2.total and q1.city=q2.city)
+
 
 --Query 8: Find the ids of the businesses that have been reviewed by more than 1030 unique users.
 
@@ -414,6 +471,28 @@ FROM
 --Query 9: Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
 SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
 ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
+
+-- Query 10 : Find the top-10 (by number of stars) ids of businesses per state. Show the results per state, in a
+--              descending order of number of stars
+
+ 
+   WITH TOPTEN AS (
+   SELECT Business_id, state, ROW_NUMBER() 
+    over (
+        PARTITION BY state
+        order by stars
+    ) AS rank
+    from Business B left join Postal_code P on B.postal_code_id= P.postal_code_id
+)
+SELECT * from TOPTEN WHERE rank <= 10
+
+SELECT Business_id, city, ROW_NUMBER() 
+    over (
+        PARTITION BY city
+        order by review_count   
+    ) as rank
+    from Business B inner join Postal_code P on B.postal_code_id= P.postal_code_id
+    where rank <=100
 
 
 --Query 11: Find and display all the cities that satisfy the following: each business in the city has at least two reviews.
@@ -472,6 +551,12 @@ WHERE
     AND b.business_id = O.business_id
     AND o.day_id IN (0,6);
 
+    --16    List the 'name', 'star' rating, and 'review_count' of the top-5 businesses in the city of 'los angeles' based
+--      on the average 'star' rating that serve both 'vegetarian' and 'vegan' food and open between '14:00' and
+--      '16:00' hours. Note: The average star rating should be computed by taking the mean of 'star' ratings
+--      provided in each review of this business.
+
+
 --Query 17: Compute the difference between the average 'star' ratings (use the reviews for each business to compute its average star rating) of businesses considered 'good for dinner' with a (1) "divey" and (2) an "upscale" ambience.
 
 SELECT AVG(rd.stars) - AVG(ru.stars)
@@ -497,6 +582,34 @@ SELECT count(*) from
 (SELECT business_id,review_count,postal_code_id from business where review_count >=100)A
 join postal_code p on (p.postal_code_id = A.postal_code_id) group by p.city having count(*)>=5)B
 ;
+
+
+--19    Find the names of the cities that satisfy the following: the combined number of reviews for the top-100
+--      (by reviews) businesses in the city is at least double the combined number of reviews for the rest of the
+--      businesses in the city.
+
+with top100 as ( select city,sum(review_count) as sumtop from
+   (SELECT Business_id,review_count, city, ROW_NUMBER() 
+    over (
+        PARTITION BY city
+        order by review_count   
+    ) as rank
+    from Business B inner join Postal_code P on B.postal_code_id= P.postal_code_id)
+    where rank <=100 group by city
+),
+bottom as ( select city,sum(review_count) as sumrest from
+   (SELECT Business_id,review_count, city, ROW_NUMBER() 
+    over (
+        PARTITION BY city
+        order by review_count   
+    ) AS rank
+    from Business B inner join Postal_code P on B.postal_code_id= P.postal_code_id  
+    ) where rank>100 group by city) 
+    
+select * from top100 topo inner join bottom botto on topo.city=botto.city and topo.sumtop>=botto.sumrest*2
+
+
+    
 
 --Query 20: For each of the top-10 (by the number of reviews) businesses, find the top-3 reviewers by activity among those who reviewed the business. Reviewers by activity are defined and ordered as the users that have the highest numbers of total reviews across all the businesses (the users that review the most).
 #incomplete 
