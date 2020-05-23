@@ -525,8 +525,12 @@ order by reviewed DESC fetch first 1 rows only
                      
                     
 --Query 14: What is the difference between the average useful rating of reviews given by elite and non-elite users?
-#Takes a long time
-
+SELECT U1.avg_useful_el - U2.avg_useful_el
+FROM
+(SELECT AVG(re.useful) as avg_useful_el FROM Reviews RE INNER JOIN Elite E ON (re.user_id = e.user_id))U1,
+(SELECT AVG(re.useful) as avg_useful_el FROM Reviews RE LEFT JOIN Elite E ON (re.user_id = e.user_id) WHERE e.user_id IS NULL)U2
+;
+                     
 # by wenuka
 --15 - List the name of the businesses that are currently 'open', possess a median star rating of 4.5 or above, considered good for 'brunch', and open on weekends.
 SELECT DISTINCT name 
