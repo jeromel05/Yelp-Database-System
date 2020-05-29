@@ -15,3 +15,6 @@ Finalysing the DDL, ER and a report
 ## Milestone 3
 
 ## Final Submission
+
+Please refer the report.pdf or the report for the final submission.
+For the final DDL commands please refer to the DDL.sql file.
