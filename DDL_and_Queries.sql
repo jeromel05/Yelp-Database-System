@@ -266,7 +266,7 @@ with userFriends(friendsCnt, userId) as
 UNION
 (select count(*) as countV, user_id2 as user_id from friends group by (user_id2)) 
 )
-select friendsCnt, userId from userFriends order by friendsCnt desc FETCH FIRST 10 ROWS ONLY;
+select sum(friendsCnt)  as fullcount, userId  from userFriends group by userId order by fullcount desc FETCH FIRST 10 ROWS ONLY;
 
 --Query 7: Show the business name, number of stars, and the business review count of the top-5 businesses based
 --         on their review count that are currently open in the city of San Diego.
