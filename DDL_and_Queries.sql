@@ -465,7 +465,7 @@ FROM
 
 --Query 9: Find the top-10 (by the number of stars) businesses (business name, number of stars) in the state of California.
                      
-SELECT * FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
+SELECT name,stars FROM business WHERE business.postal_code_id IN (SELECT postal_code_id FROM POSTAL_CODE WHERE state='CA') 
 ORDER BY business.stars desc FETCH FIRST 10 ROWS ONLY;
                      
 
