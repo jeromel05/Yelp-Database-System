@@ -379,10 +379,10 @@ FROM
 SELECT name,stars,review_count FROM business b JOIN attr_music m ON b.business_id = m.business_id 
 JOIN category c ON b.business_id = c.business_id 
 WHERE m.sub_attr_id IN (SELECT sub_attr_id FROM attr_music_map WHERE sub_attr_name like 'live') 
-AND c.cat_id IN (SELECT cat_id FROM category_map WHERE cat_name like 'irish pub');
+AND c.cat_id IN (SELECT cat_id FROM category_map WHERE UPPER(cat_name) like 'IRISH PUB');
 
 --Query 4 : Find the average number of attribute “useful” of the users whose average rating falls in the following 2
--           ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
+--           ranges: [2-4), [4-5]. Display separately these results for elite users vs. regular users (4 values total).
 
 -- should implement a different query for elite and regular users
 Select  avg(review_count) as avgEL24_avgEL45_avgreg24_avgreg45
